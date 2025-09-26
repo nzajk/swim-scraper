@@ -3,12 +3,9 @@
 import os
 from datetime import datetime
 import pandas as pd
-from dotenv import load_dotenv
 from scraper import cache_data
 from notify import send_message
 from config import CSV_FILE_NAME
-
-load_dotenv()
 
 TOKEN = os.getenv('TOKEN')
 TELEGRAM_KEY = os.getenv('TELEGRAM_KEY')

@@ -5,10 +5,8 @@ import os
 import requests
 import re
 import pandas as pd
-from dotenv import load_dotenv
 from config import LOCATION_PREFERENCES, CALENDAR_ID, WIDGET_ID, URL, NUM_DAYS
 
-load_dotenv()
 TOKEN = os.getenv('TOKEN')
 
 if not TOKEN:

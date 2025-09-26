@@ -2,9 +2,6 @@
 
 import os
 import requests
-from dotenv import load_dotenv
-
-load_dotenv()
 
 TELEGRAM_KEY = os.getenv('TELEGRAM_KEY')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
