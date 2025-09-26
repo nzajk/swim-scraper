@@ -1,45 +1,45 @@
-from datetime import date
-import requests
+# main.py
+
+import os
+from datetime import datetime
 import pandas as pd
+from dotenv import load_dotenv
+from scraper import cache_data
+from notify import send_message
+from config import CSV_FILE_NAME
 
-date = date.today().isoformat()
+load_dotenv()
 
-payload = {
-    "calendarId": "a63742fd-71f9-471b-a2b7-0958d5629622",
-    "widgetId": "4cc6bb5d-4261-4f91-9533-62eebea54c8a",
-    "occurrenceDate": date
-}
-headers = {
-    "Content-Type": "application/json"
-}
-location_preferences = {'Dalewood Recreation Centre'}
+TOKEN = os.getenv('TOKEN')
+TELEGRAM_KEY = os.getenv('TELEGRAM_KEY')
+CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-# todo: extract more dates at a time, right now it only pulls the next 3 days.
-def extract_data(payload, headers, location_preferences):
-    url = "https://cityofhamilton.perfectmind.com/39117/Clients/BookMe4BookingPagesV2/ClassesV2"
-    response = requests.post(url, json=payload, headers=headers)
-    data = response.json()
+if not TOKEN:
+    raise ValueError('TOKEN not found in .env')
+if not TELEGRAM_KEY or not CHAT_ID:
+    raise ValueError('Telegram token or chat ID not found in .env')
 
-    rows = []
-    for cls in data.get('classes', []):
-        row = {
-            "Location": cls.get("Location"),
-            "Start Date": cls.get("FormattedStartDate"),
-            "Start Time": cls.get("FormattedStartTime"),
-            "End Date": cls.get("FormattedEndDate"),
-            "End Time": cls.get("FormattedEndTime")
-        }
 
-        if cls.get('Location') in location_preferences:
-            rows.append(row)
-    
-    df = pd.DataFrame(rows)
+def main():
+    try:
+        cache_data(CSV_FILE_NAME)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
-    return df
+    df = pd.read_csv(CSV_FILE_NAME)
+    today_df = df[df['Start Date'] == datetime.today().strftime('%Y-%m-%d')]
 
-# todo: send push notifications via telegram.
-def notify():
-    pass
+    if today_df.empty:
+        return
 
-swim_times = extract_data(payload, headers, location_preferences)
-print(swim_times)
+    message_lines = [
+        f"{row['Start Time']} - {row['End Time']}" 
+        for _, row in today_df.iterrows()
+    ]
+    location = today_df.iloc[0]['Location']
+    message = f"🏊 Today's Swim Times at {location}:\n" + "\n".join(message_lines)
+
+    send_message(message)
+
+if __name__ == '__main__':
+    main()
